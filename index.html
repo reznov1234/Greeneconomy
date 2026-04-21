@@ -110,7 +110,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
-        const IMGBB_API_KEY = "5866bcbbab41385b6a13a1fd4ea107ca";
+        
+        // KONFIGURASI CLOUDINARY
+        const CLOUDINARY_CLOUD_NAME = "dp6j4fedr";
+        const CLOUDINARY_UPLOAD_PRESET = "my0xrrdm";
         const ADMIN_EMAIL = "reznov.c12@gmail.com"; 
 
         onAuthStateChanged(auth, (user) => {
@@ -133,16 +136,24 @@
 
             btn.disabled = true; btn.innerText = "Mengunggah...";
             try {
+                // PROSES UPLOAD CLOUDINARY
                 const formData = new FormData();
-                formData.append("image", file);
-                const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+                formData.append("file", file);
+                formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+                const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { 
+                    method: "POST", 
+                    body: formData 
+                });
                 const res = await resp.json();
+
+                if (!res.secure_url) throw new Error("Gagal upload");
 
                 await addDoc(collection(db, "barang_barter"), {
                     nama: document.getElementById('nama-barang').value,
                     deskripsi: document.getElementById('deskripsi').value,
                     wa: document.getElementById('no-wa').value,
-                    foto: res.data.display_url,
+                    foto: res.secure_url,
                     email: user.email,
                     owner: user.displayName,
                     kondisi: document.getElementById('kelayakan').value + "%",
@@ -150,7 +161,12 @@
                     waktu: serverTimestamp()
                 });
                 alert("Berhasil! Tunggu approval."); location.reload();
-            } catch (e) { alert("Gagal!"); btn.disabled = false; }
+            } catch (e) { 
+                alert("Gagal Upload! Cek pengaturan Security Cloudinary."); 
+                console.error(e);
+                btn.disabled = false; 
+                btn.innerText = "Tayangkan Barang";
+            }
         };
 
         onSnapshot(query(collection(db, "barang_barter"), orderBy("waktu", "desc")), (snap) => {
@@ -192,7 +208,6 @@
                     </div>
                 `;
 
-                // Monitor Deal & Tombol Cancel Barter
                 onSnapshot(query(collection(db, "permintaan_tukar"), where("id_barang", "==", id), where("status", "==", "accepted")), (tSnap) => {
                     tSnap.forEach(tDoc => {
                         const tData = tDoc.data();
