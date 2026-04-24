@@ -79,7 +79,7 @@
                 
                 <div class="input-group"><label>Nama Barang</label><input type="text" id="nama-barang"></div>
                 <div style="display:flex; gap:10px;">
-                    <div class="input-group" style="flex:1;"><label>WA (Awali 62)</label><input type="number" id="no-wa"></div>
+                    <div class="input-group" style="flex:1;"><label>WA (Awali +62)</label><input type="number" id="no-wa"></div>
                     <div class="input-group" style="flex:1;"><label>Kelayakan (%)</label><input type="number" id="kelayakan"></div>
                 </div>
                 <div class="input-group"><label>Deskripsi Detail</label><textarea id="deskripsi" rows="2"></textarea></div>
@@ -114,7 +114,7 @@
         // KONFIGURASI CLOUDINARY
         const CLOUDINARY_CLOUD_NAME = "dp6j4fedr";
         const CLOUDINARY_UPLOAD_PRESET = "my0xrrdm";
-        const ADMIN_EMAIL = "denandaanggun165@gmail.com"; 
+        const ADMIN_EMAIL = "denandaanggun165@gmail.com,reznov.c12@gmail.com"; 
 
         onAuthStateChanged(auth, (user) => {
             document.getElementById('login-section').style.display = user ? 'none' : 'block';
