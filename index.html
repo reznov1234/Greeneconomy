@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Green Economy - Barter Digital</title>
+    <title>Green Economy - Digital Barter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #16a34a; --bg: #f8fafc; --text: #1e293b; --wa: #25d366; --accent: #3b82f6; --danger: #ef4444; --warning: #f59e0b; }
@@ -58,7 +58,7 @@
         <div id="noti-modal">
             <div class="modal-content">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h3 style="margin:0">Permintaan Masuk</h3>
+                    <h3 style="margin:0">Incoming Requests</h3>
                     <button onclick="document.getElementById('noti-modal').style.display='none'" style="border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
                 </div>
                 <div id="noti-list"></div>
@@ -66,29 +66,29 @@
         </div>
 
         <div id="login-section" class="glass-card" style="text-align: center;">
-            <h3>Mulai Barter</h3>
-            <button class="btn" id="btn-login">Masuk dengan Google</button>
+            <h3>Start exchanging goods</h3>
+            <button class="btn" id="btn-login">Sign in with Google</button>
         </div>
 
         <div id="user-section">
             <div class="glass-card">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
                     <span style="font-size: 13px;">User: <b id="user-name"></b></span>
-                    <button id="btn-logout" style="border:none; color:var(--danger); background:none; cursor:pointer; font-size:12px;">Keluar</button>
+                    <button id="btn-logout" style="border:none; color:var(--danger); background:none; cursor:pointer; font-size:12px;">Sign Out</button>
                 </div>
                 
-                <div class="input-group"><label>Nama Barang</label><input type="text" id="nama-barang"></div>
+                <div class="input-group"><label>Item Name</label><input type="text" id="nama-barang" placeholder="e.g. Mountain Bike"></div>
                 <div style="display:flex; gap:10px;">
-                    <div class="input-group" style="flex:1;"><label>WA (Awali +62)</label><input type="number" id="no-wa"></div>
-                    <div class="input-group" style="flex:1;"><label>Kelayakan (%)</label><input type="number" id="kelayakan"></div>
+                    <div class="input-group" style="flex:1;"><label>WhatsApp (Starts with +62)</label><input type="number" id="no-wa" placeholder="62812..."></div>
+                    <div class="input-group" style="flex:1;"><label>Condition (%)</label><input type="number" id="kelayakan" placeholder="0-100"></div>
                 </div>
-                <div class="input-group"><label>Deskripsi Detail</label><textarea id="deskripsi" rows="2"></textarea></div>
-                <div class="input-group"><label>Foto Barang</label><input type="file" id="foto-barang" accept="image/*"></div>
-                <button class="btn" id="btn-upload">Tayangkan Barang</button>
+                <div class="input-group"><label>Detailed Description</label><textarea id="deskripsi" rows="2" placeholder="Tell us about the item's current state..."></textarea></div>
+                <div class="input-group"><label>Item Photo</label><input type="file" id="foto-barang" accept="image/*"></div>
+                <button class="btn" id="btn-upload">List Item for Barter</button>
             </div>
         </div>
 
-        <h3 style="margin: 20px 0 15px; color: #334155;">Katalog Barang</h3>
+        <h3 style="margin: 20px 0 15px; color: #334155;">Items Catalog</h3>
         <div id="daftar-barang" class="card-grid"></div>
     </div>
 
@@ -111,7 +111,6 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
         
-        // KONFIGURASI CLOUDINARY
         const CLOUDINARY_CLOUD_NAME = "dp6j4fedr";
         const CLOUDINARY_UPLOAD_PRESET = "my0xrrdm";
         const ADMIN_EMAIL = "denandaanggun165@gmail.com"; 
@@ -132,11 +131,10 @@
             const user = auth.currentUser;
             const file = document.getElementById('foto-barang').files[0];
             const btn = document.getElementById('btn-upload');
-            if (!file || !document.getElementById('nama-barang').value) return alert("Isi data!");
+            if (!file || !document.getElementById('nama-barang').value) return alert("Please fill in all required fields!");
 
-            btn.disabled = true; btn.innerText = "Mengunggah...";
+            btn.disabled = true; btn.innerText = "Uploading...";
             try {
-                // PROSES UPLOAD CLOUDINARY
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
@@ -147,7 +145,7 @@
                 });
                 const res = await resp.json();
 
-                if (!res.secure_url) throw new Error("Gagal upload");
+                if (!res.secure_url) throw new Error("Upload failed");
 
                 await addDoc(collection(db, "barang_barter"), {
                     nama: document.getElementById('nama-barang').value,
@@ -160,12 +158,12 @@
                     status: "pending", 
                     waktu: serverTimestamp()
                 });
-                alert("Berhasil! Tunggu approval."); location.reload();
+                alert("Success! Your item is awaiting approval."); location.reload();
             } catch (e) { 
-                alert("Gagal Upload! Cek pengaturan Security Cloudinary."); 
+                alert("Upload failed! Please check your connection or Cloudinary settings."); 
                 console.error(e);
                 btn.disabled = false; 
-                btn.innerText = "Tayangkan Barang";
+                btn.innerText = "List Item for Barter";
             }
         };
 
@@ -186,13 +184,13 @@
                 let actionHtml = "";
                 if (isAdmin) {
                     if (!isApproved) actionHtml += `<button class="btn-admin" style="background:var(--primary)" onclick="window.updBarang('${id}','approved')">Approve</button>`;
-                    else actionHtml += `<button class="btn-admin" style="background:var(--warning)" onclick="window.updBarang('${id}','pending')">Batal Approved</button>`;
-                    actionHtml += `<button class="btn-admin" style="background:var(--danger)" onclick="window.delBarang('${id}')">Hapus Barang</button>`;
+                    else actionHtml += `<button class="btn-admin" style="background:var(--warning)" onclick="window.updBarang('${id}','pending')">Revoke Approval</button>`;
+                    actionHtml += `<button class="btn-admin" style="background:var(--danger)" onclick="window.delBarang('${id}')">Delete Item</button>`;
                 } else if (isOwner) {
                     actionHtml += `<p style="color:#94a3b8; font-size:11px; font-style:italic">Status: ${d.status}</p>`;
-                    actionHtml += `<button class="btn-admin" style="background:var(--danger); width:100%;" onclick="window.delBarang('${id}')">Hapus Barang Saya</button>`;
+                    actionHtml += `<button class="btn-admin" style="background:var(--danger); width:100%;" onclick="window.delBarang('${id}')">Remove My Item</button>`;
                 } else {
-                    actionHtml = `<div id="action-zone-${id}"><button class="btn btn-tukar" onclick="window.ajakTukar('${id}', '${d.email}', '${d.nama}')">Ajak Tukar</button></div>`;
+                    actionHtml = `<div id="action-zone-${id}"><button class="btn btn-tukar" onclick="window.ajakTukar('${id}', '${d.email}', '${d.nama}')">Propose Exchange</button></div>`;
                 }
 
                 container.innerHTML += `
@@ -201,8 +199,8 @@
                         <div class="card-body">
                             <span class="badge ${isApproved ? 'st-approved' : 'st-pending'}">${d.status}</span>
                             <h4 style="margin:5px 0">${d.nama}</h4>
-                            <p style="font-size:11px; color:#64748b">Oleh: ${d.owner}</p>
-                            <div class="card-desc">${d.deskripsi || 'No Desc'}</div>
+                            <p style="font-size:11px; color:#64748b">Owner: ${d.owner} (${d.kondisi})</p>
+                            <div class="card-desc">${d.deskripsi || 'No description provided.'}</div>
                             <div id="action-${id}">${actionHtml}</div>
                         </div>
                     </div>
@@ -213,12 +211,12 @@
                         const tData = tDoc.data();
                         const tId = tDoc.id;
                         if(user && (user.email === tData.pengajak || user.email === tData.pemilik_asal)) {
-                            const waLink = `https://wa.me/${d.wa}?text=Deal%20Barter!`;
+                            const waLink = `https://wa.me/${d.wa}?text=Hi,%20let's%20complete%20the%20barter%20deal!`;
                             const target = document.getElementById(`action-${id}`);
                             if(target) target.innerHTML = `
-                                <a href="${waLink}" target="_blank" class="btn-wa">Chat WA (Deal!)</a>
-                                <button class="btn btn-cancel-barter" onclick="window.cancelBarter('${tId}')">Batalkan Barter Ini</button>
-                                ${isOwner || isAdmin ? `<button class="btn-admin" style="background:var(--danger); width:100%; margin-top:5px;" onclick="window.delBarang('${id}')">Hapus Barang</button>` : ''}
+                                <a href="${waLink}" target="_blank" class="btn-wa">Chat on WhatsApp (Deal!)</a>
+                                <button class="btn btn-cancel-barter" onclick="window.cancelBarter('${tId}')">Cancel This Barter</button>
+                                ${isOwner || isAdmin ? `<button class="btn-admin" style="background:var(--danger); width:100%; margin-top:5px;" onclick="window.delBarang('${id}')">Delete Item</button>` : ''}
                             `;
                         }
                     });
@@ -228,25 +226,25 @@
 
         window.ajakTukar = async (id, email, nama) => {
             const user = auth.currentUser;
-            if(!user) return alert("Login!");
+            if(!user) return alert("Please login first!");
             const q = query(collection(db, "barang_barter"), where("email", "==", user.email));
             const userGoods = await getDocs(q);
-            if(userGoods.empty) return alert("Upload barang dulu!");
+            if(userGoods.empty) return alert("You must list an item of your own before proposing a barter!");
             
-            if(confirm("Kirim ajakan barter?")) {
+            if(confirm("Send barter request?")) {
                 await addDoc(collection(db, "permintaan_tukar"), {
                     id_barang: id, nama_barang: nama,
                     pengajak: user.email, nama_pengajak: user.displayName,
                     pemilik_asal: email, status: "pending", waktu: serverTimestamp()
                 });
-                alert("Terkirim!");
+                alert("Request sent!");
             }
         };
 
         window.cancelBarter = async (idReq) => {
-            if(confirm("Apakah Anda yakin ingin membatalkan jabat tangan barter ini? Tombol WA akan hilang kembali.")) {
+            if(confirm("Are you sure you want to cancel this barter agreement? The WhatsApp link will be removed.")) {
                 await deleteDoc(doc(db, "permintaan_tukar", idReq));
-                alert("Barter dibatalkan.");
+                alert("Barter cancelled.");
             }
         };
 
@@ -256,12 +254,12 @@
                 document.getElementById('noti-count').innerText = snap.size;
                 document.getElementById('noti-count').style.display = snap.size > 0 ? 'block' : 'none';
                 const list = document.getElementById('noti-list');
-                list.innerHTML = snap.empty ? "<p>Kosong.</p>" : "";
+                list.innerHTML = snap.empty ? "<p>No new requests.</p>" : "";
                 snap.forEach(sDoc => {
                     const d = sDoc.data();
                     list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee">
-                        <p style="font-size:13px"><b>${d.nama_pengajak}</b> ingin barter.</p>
-                        <button class="btn" style="padding:5px" onclick="window.accTukar('${sDoc.id}')">Terima</button>
+                        <p style="font-size:13px"><b>${d.nama_pengajak}</b> wants to barter for <b>${d.nama_barang}</b>.</p>
+                        <button class="btn" style="padding:5px" onclick="window.accTukar('${sDoc.id}')">Accept Request</button>
                     </div>`;
                 });
             });
@@ -269,11 +267,11 @@
 
         window.accTukar = async (id) => {
             await updateDoc(doc(db, "permintaan_tukar", id), { status: "accepted" });
-            alert("Deal!"); document.getElementById('noti-modal').style.display = 'none';
+            alert("Deal confirmed!"); document.getElementById('noti-modal').style.display = 'none';
         };
 
         window.updBarang = async (id, s) => await updateDoc(doc(db, "barang_barter", id), { status: s });
-        window.delBarang = async (id) => { if(confirm("Hapus barang permanen?")) await deleteDoc(doc(db, "barang_barter", id)); };
+        window.delBarang = async (id) => { if(confirm("Permanently delete this item?")) await deleteDoc(doc(db, "barang_barter", id)); };
         document.getElementById('open-noti').onclick = () => document.getElementById('noti-modal').style.display = 'block';
     </script>
 </body>
